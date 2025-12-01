@@ -10,6 +10,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import PoolIcon from '@mui/icons-material/Pool';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -31,6 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
         ? [
             { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
             { text: 'All Leads', icon: <ListAltIcon />, path: '/admin/all-leads' },
+            { text: 'Lead Assignment', icon: <AssignmentIndIcon />, path: '/admin/lead-assignment' },
             { text: 'Pool Leads', icon: <PoolIcon />, path: '/admin/pool' },
             { text: 'Approvals', icon: <AssignmentIcon />, path: '/admin/approvals' },
             { text: 'Bulk Upload', icon: <CloudUploadIcon />, path: '/admin/bulk-upload' },
