@@ -99,9 +99,27 @@ export const addLeadUpdate = async (leadId: string, update: Omit<LeadUpdate, 'id
         ...update
     };
 
-    await updateDoc(leadRef, {
+    // Prepare updates for the lead document
+    const leadUpdates: any = {
         updates: [newUpdate, ...currentUpdates]
-    });
+    };
+
+    // Update Stage if the status string matches a valid stage
+    // (Assuming the UI passes the Stage ID as 'status')
+    if (['NEW', 'CONTACTED', 'DEMO_SCHEDULED', 'DEMO_SHOWED', 'QUOTATION_SENT', 'NEGOTIATION', 'CONVERTED', 'CANCELLED'].includes(update.status)) {
+        leadUpdates.stage = update.status;
+    }
+
+    // Update Status if Converted or Cancelled
+    if (update.status === 'CONVERTED') leadUpdates.status = 'CONVERTED';
+    if (update.status === 'CANCELLED') leadUpdates.status = 'CANCELLED';
+
+    // Update Probability
+    if (update.probability !== undefined) {
+        leadUpdates.probability = update.probability;
+    }
+
+    await updateDoc(leadRef, leadUpdates);
 };
 
 export const claimLead = async (leadId: string, userId: string, userName: string, lockDurationMonths: number): Promise<void> => {

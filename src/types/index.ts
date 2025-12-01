@@ -38,6 +38,8 @@ export interface LeadUpdate {
     remarks: string;
     timestamp: number;
     updatedBy: string;
+    attachments?: { name: string; url: string }[];
+    probability?: number; // Added
 }
 
 export interface Lead {
@@ -50,6 +52,7 @@ export interface Lead {
     zipCode: string; // ZIP/Postal code for uniqueness
     landmark?: string;
     contactPerson: string;
+    designation?: string; // Added field
     contactEmail: string;
     contactPhone: string;
     contactedDate?: number; // Timestamp for when contact was made
@@ -61,6 +64,7 @@ export interface Lead {
     // Ownership & Status
     status: LeadStatus;
     stage: LeadStage;
+    probability?: number; // Conversion probability (10-95%)
     assignedToUserId?: string;
     assignedToName?: string; // Denormalized
     lockedUntil?: number; // Timestamp
@@ -71,6 +75,17 @@ export interface Lead {
 
     // History
     updates: LeadUpdate[];
+}
+
+export interface Notification {
+    id: string;
+    userId: string;
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'warning' | 'error';
+    read: boolean;
+    createdAt: number;
+    link?: string; // Optional link to navigate to
 }
 
 export interface DashboardStats {
@@ -87,7 +102,8 @@ export interface BulkUploadRow {
         contactPerson: string;
         schoolName: string;
         designation: string;
-        inchargePersonName: string;
+        region: string; // Changed from inchargePersonName
+        contactNo: string; // Added
     };
     verifiedData: {
         schoolName: string;
@@ -104,7 +120,7 @@ export interface BulkUploadRow {
         assignedToUserId: string;
         assignedToUserName: string;
     };
-    status: 'PENDING' | 'VERIFYING' | 'VERIFIED' | 'DUPLICATE' | 'ERROR' | 'UPLOADED' | 'USER_NOT_FOUND' | 'MULTIPLE_MATCHES' | 'NO_MATCH';
+    status: 'PENDING' | 'VERIFYING' | 'VERIFIED' | 'DUPLICATE' | 'ERROR' | 'UPLOADED' | 'REGION_NOT_FOUND' | 'MULTIPLE_MATCHES' | 'NO_MATCH';
     message?: string;
     uploadDate: number;
 }

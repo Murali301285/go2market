@@ -12,9 +12,8 @@ import * as XLSX from 'xlsx';
 import { useLoadScript, Autocomplete } from '@react-google-maps/api';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { getUsers } from '../../services/userService';
 import { getRegions } from '../../services/regionService';
-import type { User, Region, BulkUploadRow, Lead } from '../../types';
+import type { Region, BulkUploadRow, Lead } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 
 const libraries: ("places")[] = ["places"];
@@ -27,7 +26,7 @@ const AutocompleteInput = forwardRef<HTMLInputElement, TextFieldProps>((props, r
 const BulkUpload: React.FC = () => {
     const { userProfile } = useAuth();
     const [rows, setRows] = useState<BulkUploadRow[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
+    // const [users, setUsers] = useState<User[]>([]); // Removed user lookup
     const [regions, setRegions] = useState<Region[]>([]);
     const [processing, setProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -58,11 +57,7 @@ const BulkUpload: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [usersData, regionsData] = await Promise.all([
-                    getUsers(),
-                    getRegions()
-                ]);
-                setUsers(usersData);
+                const regionsData = await getRegions();
                 setRegions(regionsData);
             } catch (error) {
                 console.error("Error fetching initial data:", error);
@@ -74,9 +69,20 @@ const BulkUpload: React.FC = () => {
     // --- Actions ---
 
     const handleDownloadTemplate = () => {
-        const headers = [['Contact Person', 'School Name', 'Designation', 'Incharge Person']];
+        const headers = [['Contact Person', 'School Name', 'Designation', 'Region', 'Contact No']];
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(headers);
+
+        // Set column widths
+        const wscols = [
+            { wch: 20 }, // Contact Person
+            { wch: 30 }, // School Name
+            { wch: 20 }, // Designation
+            { wch: 15 }, // Region
+            { wch: 15 }  // Contact No
+        ];
+        ws['!cols'] = wscols;
+
         XLSX.utils.book_append_sheet(wb, ws, 'Template');
         XLSX.writeFile(wb, 'lead_upload_template.xlsx');
     };
@@ -137,17 +143,18 @@ const BulkUpload: React.FC = () => {
 
             // Skip header row (assuming row 0 is header)
             const rowsData = data.slice(1).map((row: any, index) => {
-                // Map columns: A=Name, B=School, C=Designation, D=Incharge
+                // Map columns: A=Name, B=School, C=Designation, D=Region, E=Contact No
                 const contactPerson = row[0] || '';
                 const schoolName = row[1] || '';
                 const designation = row[2] || '';
-                const inchargeName = row[3] || '';
+                const region = row[3] || '';
+                const contactNo = row[4] || '';
 
                 if (!schoolName) return null; // Skip empty rows
 
                 return {
                     id: `row-${Date.now()}-${index}`,
-                    originalData: { contactPerson, schoolName, designation, inchargePersonName: inchargeName },
+                    originalData: { contactPerson, schoolName, designation, region, contactNo },
                     verifiedData: {
                         schoolName: schoolName,
                         address: '',
@@ -157,7 +164,7 @@ const BulkUpload: React.FC = () => {
                         regionName: '',
                         contactPerson: contactPerson,
                         designation: designation,
-                        contactPhone: '00000 00000',
+                        contactPhone: contactNo || '00000 00000',
                         contactEmail: '',
                         assignedToUserId: '',
                         assignedToUserName: '',
@@ -193,42 +200,25 @@ const BulkUpload: React.FC = () => {
             setProgress(Math.round(((i + 1) / updatedRows.length) * 100));
             const row = updatedRows[i];
 
-            // 1. User Lookup
-            const inchargeUser = users.find(u =>
-                u.fullName.toLowerCase() === row.originalData.inchargePersonName.toLowerCase() ||
-                u.email.toLowerCase() === row.originalData.inchargePersonName.toLowerCase()
-            );
-
-            if (inchargeUser) {
-                row.verifiedData.assignedToUserId = inchargeUser.id;
-                row.verifiedData.assignedToUserName = inchargeUser.fullName;
-
-                // Region Logic
-                if (inchargeUser.assignedRegions && inchargeUser.assignedRegions.length === 1) {
-                    const region = regions.find(r => r.id === inchargeUser.assignedRegions[0]);
-                    if (region) {
-                        row.verifiedData.regionId = region.id;
-                        row.verifiedData.regionName = region.name;
-                    }
-                } else if (!inchargeUser.assignedRegions || inchargeUser.assignedRegions.length === 0) {
-                    row.status = 'ERROR';
-                    row.message = 'User has no assigned regions';
+            // 1. Region Lookup
+            const regionNameInput = row.originalData.region?.trim();
+            if (regionNameInput) {
+                const matchedRegion = regions.find(r => r.name.toLowerCase() === regionNameInput.toLowerCase());
+                if (matchedRegion) {
+                    row.verifiedData.regionId = matchedRegion.id;
+                    row.verifiedData.regionName = matchedRegion.name;
                 } else {
-                    // Multiple regions - default to first but mark for review
-                    const region = regions.find(r => r.id === inchargeUser.assignedRegions[0]);
-                    if (region) {
-                        row.verifiedData.regionId = region.id;
-                        row.verifiedData.regionName = region.name;
-                        row.message = 'Multiple regions assigned - Defaulted to first';
-                    }
+                    row.status = 'REGION_NOT_FOUND';
+                    row.message = `Region '${regionNameInput}' not found`;
                 }
             } else {
-                row.status = 'USER_NOT_FOUND';
-                row.message = `User '${row.originalData.inchargePersonName}' not found`;
+                // No region provided - optional? Or error? Let's treat as warning/empty for now, 
+                // but Google verification might need it for disambiguation.
+                // row.message = 'No region provided';
             }
 
             // 2. Google Verification (Using Autocomplete Logic + Region Filtering)
-            if (row.status !== 'USER_NOT_FOUND') {
+            if (row.status !== 'REGION_NOT_FOUND') {
                 try {
                     await new Promise<void>((resolve) => {
                         autocompleteService.getPlacePredictions({ input: row.originalData.schoolName }, (predictions, status) => {
@@ -398,12 +388,12 @@ const BulkUpload: React.FC = () => {
                     contactPhone: row.verifiedData.contactPhone,
                     contactEmail: row.verifiedData.contactEmail,
                     googlePlaceId: row.verifiedData.googlePlaceId,
-                    assignedToUserId: row.verifiedData.assignedToUserId,
-                    assignedToName: row.verifiedData.assignedToUserName,
-                    status: 'LOCKED', // Auto-approved -> LOCKED to the user
+                    assignedToUserId: '', // Unassigned initially
+                    assignedToName: '',
+                    status: 'POOL', // Unassigned -> POOL
                     stage: 'NEW',
                     createdAt: Date.now(),
-                    createdBy: row.verifiedData.assignedToUserId, // Lead by -> Same User name (Assigned)
+                    createdBy: userProfile?.id || 'admin', // Created by Admin (current user)
                     remarks: `Added via bulk upload by ${userProfile?.fullName} on ${formattedDate}. Browser: ${navigator.userAgent}`,
                     updates: []
                 };
@@ -448,7 +438,7 @@ const BulkUpload: React.FC = () => {
             case 'UPLOADED': return '#e8f5e9'; // Green
             case 'VERIFIED': return '#e3f2fd'; // Blue
             case 'ERROR':
-            case 'USER_NOT_FOUND':
+            case 'REGION_NOT_FOUND':
             case 'NO_MATCH': return '#ffebee'; // Red
             case 'DUPLICATE': return '#fff3e0'; // Orange
             case 'MULTIPLE_MATCHES': return '#fff8e1'; // Yellow
@@ -728,7 +718,7 @@ const BulkUpload: React.FC = () => {
                                     direction={orderBy === 'assignedToUserName' ? order : 'asc'}
                                     onClick={() => handleRequestSort('assignedToUserName')}
                                 >
-                                    Incharge
+                                    Incharge (Unassigned)
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell>

@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import {
     Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Typography, Chip, IconButton, Tabs, Tab, TextField, MenuItem, Select, FormControl,
+    Typography, Chip, IconButton, TextField, MenuItem, Select, FormControl,
     InputLabel, Button, TablePagination, InputAdornment, Tooltip
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { useAuth } from '../../hooks/useAuth';
-import { getLeadsByUserId, getLeadsCreatedByUser } from '../../services/leadService';
+import { getLeadsByUserId } from '../../services/leadService';
 import type { Lead } from '../../types';
 import PageLoading from '../../components/common/PageLoading';
 
@@ -19,12 +24,10 @@ const MyLeads: React.FC = () => {
     const navigate = useNavigate();
 
     // Data State
-    const [createdLeads, setCreatedLeads] = useState<Lead[]>([]);
-    const [assignedLeads, setAssignedLeads] = useState<Lead[]>([]);
+    const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
 
     // UI State
-    const [tabValue, setTabValue] = useState(0);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -38,12 +41,8 @@ const MyLeads: React.FC = () => {
         const fetchLeads = async () => {
             if (user) {
                 try {
-                    const [created, assigned] = await Promise.all([
-                        getLeadsCreatedByUser(user.uid),
-                        getLeadsByUserId(user.uid)
-                    ]);
-                    setCreatedLeads(created);
-                    setAssignedLeads(assigned);
+                    const assigned = await getLeadsByUserId(user.uid);
+                    setLeads(assigned);
                 } catch (error: unknown) {
                     console.error("Failed to fetch leads", error);
                 } finally {
@@ -53,6 +52,25 @@ const MyLeads: React.FC = () => {
         };
         fetchLeads();
     }, [user]);
+
+    // Stats Calculation
+    const totalLeads = leads.length;
+    const convertedLeads = leads.filter(l => l.status === 'CONVERTED');
+    const failedLeads = leads.filter(l => l.status === 'CANCELLED');
+    const conversionRate = totalLeads > 0 ? ((convertedLeads.length / totalLeads) * 100).toFixed(1) : '0';
+
+    // Avg Conversion Days
+    let totalDays = 0;
+    let countWithDays = 0;
+    convertedLeads.forEach(lead => {
+        const convertedUpdate = lead.updates?.find(u => u.status === 'CONVERTED');
+        if (convertedUpdate) {
+            const days = (convertedUpdate.timestamp - lead.createdAt) / (1000 * 60 * 60 * 24);
+            totalDays += days;
+            countWithDays++;
+        }
+    });
+    const avgConversionDays = countWithDays > 0 ? (totalDays / countWithDays).toFixed(1) : 'N/A';
 
     // Helper functions
     const getStatusLabel = (status: string) => {
@@ -79,9 +97,7 @@ const MyLeads: React.FC = () => {
     };
 
     // Filtering logic
-    const currentLeads = tabValue === 0 ? createdLeads : assignedLeads;
-
-    const filteredLeads = currentLeads.filter(lead => {
+    const filteredLeads = leads.filter(lead => {
         // Search Filter
         const searchLower = searchQuery.toLowerCase();
         const matchesSearch =
@@ -144,24 +160,42 @@ const MyLeads: React.FC = () => {
 
     if (loading) return <PageLoading />;
 
+    const StatBox = ({ title, value, icon, color }: any) => (
+        <Paper sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%' }}>
+            <Box>
+                <Typography variant="body2" color="text.secondary">{title}</Typography>
+                <Typography variant="h5" fontWeight="bold" sx={{ color }}>{value}</Typography>
+            </Box>
+            <Box sx={{ p: 1, borderRadius: '50%', bgcolor: `${color}20`, color }}>
+                {icon}
+            </Box>
+        </Paper>
+    );
+
     return (
         <Box>
             <Typography variant="h4" gutterBottom fontWeight="bold">
                 My Leads
             </Typography>
 
-            <Paper sx={{ mb: 3 }}>
-                <Tabs
-                    value={tabValue}
-                    onChange={(_e, v) => { setTabValue(v); setPage(0); }}
-                    indicatorColor="primary"
-                    textColor="primary"
-                    variant="fullWidth"
-                >
-                    <Tab label={`My Created Leads (${createdLeads.length})`} />
-                    <Tab label={`Assigned to Me (${assignedLeads.length})`} />
-                </Tabs>
-            </Paper>
+            {/* Stats Header */}
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+                <Box sx={{ flex: '1 1 200px' }}>
+                    <StatBox title="Assigned" value={totalLeads} icon={<AssignmentIcon />} color="#1976d2" />
+                </Box>
+                <Box sx={{ flex: '1 1 200px' }}>
+                    <StatBox title="Converted" value={convertedLeads.length} icon={<CheckCircleIcon />} color="#2e7d32" />
+                </Box>
+                <Box sx={{ flex: '1 1 200px' }}>
+                    <StatBox title="Failed" value={failedLeads.length} icon={<CancelIcon />} color="#d32f2f" />
+                </Box>
+                <Box sx={{ flex: '1 1 200px' }}>
+                    <StatBox title="Conversion Rate" value={`${conversionRate}%`} icon={<TrendingUpIcon />} color="#ed6c02" />
+                </Box>
+                <Box sx={{ flex: '1 1 200px' }}>
+                    <StatBox title="Avg Conv. Days" value={avgConversionDays} icon={<AccessTimeIcon />} color="#9c27b0" />
+                </Box>
+            </Box>
 
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
