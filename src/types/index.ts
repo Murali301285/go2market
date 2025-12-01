@@ -8,6 +8,7 @@ export interface User {
     defaultLockInMonths: 1 | 3 | 6;
     assignedRegions: string[]; // Array of region IDs - required
     isActive: boolean;
+    isMarketUser?: boolean; // Flag to identify market users for dashboard reporting
     createdAt: number; // Timestamp
 }
 
@@ -18,7 +19,7 @@ export interface Region {
     isActive: boolean;
 }
 
-export type LeadStatus = 'PENDING' | 'LOCKED' | 'CONVERTED' | 'CANCELLED' | 'POOL';
+export type LeadStatus = 'PENDING' | 'LOCKED' | 'CONVERTED' | 'CANCELLED' | 'POOL' | 'INACTIVE';
 
 export type LeadStage =
     | 'NEW'              // Just created

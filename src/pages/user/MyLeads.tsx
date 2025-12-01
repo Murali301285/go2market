@@ -18,6 +18,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getLeadsByUserId } from '../../services/leadService';
 import type { Lead } from '../../types';
 import PageLoading from '../../components/common/PageLoading';
+import { getStageColor } from '../../utils/colors';
 
 const MyLeads: React.FC = () => {
     const { user } = useAuth();
@@ -82,17 +83,6 @@ const MyLeads: React.FC = () => {
             case 'CANCELLED': return 'Cancelled';
             case 'EXPIRED': return 'Expired';
             default: return status;
-        }
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'PENDING': return 'warning';
-            case 'LOCKED': return 'info';
-            case 'CONVERTED': return 'success';
-            case 'CANCELLED': return 'error';
-            case 'POOL': return 'default';
-            default: return 'default';
         }
     };
 
@@ -272,11 +262,11 @@ const MyLeads: React.FC = () => {
                 <Table sx={{ minWidth: 650 }} aria-label="leads table">
                     <TableHead>
                         <TableRow>
+                            <TableCell>Sl No</TableCell>
                             <TableCell>School Name</TableCell>
                             <TableCell>Region</TableCell>
                             <TableCell>Contact Person</TableCell>
                             <TableCell>Phone</TableCell>
-                            <TableCell>Status</TableCell>
                             <TableCell>Stage</TableCell>
                             <TableCell>Created At</TableCell>
                             <TableCell align="right">Actions</TableCell>
@@ -292,13 +282,16 @@ const MyLeads: React.FC = () => {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            paginatedLeads.map((lead) => (
+                            paginatedLeads.map((lead, index) => (
                                 <TableRow
                                     key={lead.id}
                                     hover
                                     onClick={() => navigate(`/leads/${lead.id}`)}
                                     sx={{ cursor: 'pointer' }}
                                 >
+                                    <TableCell>
+                                        {page * rowsPerPage + index + 1}
+                                    </TableCell>
                                     <TableCell component="th" scope="row" sx={{ fontWeight: 'bold' }}>
                                         {lead.schoolName}
                                     </TableCell>
@@ -307,18 +300,10 @@ const MyLeads: React.FC = () => {
                                     <TableCell>{lead.contactPhone}</TableCell>
                                     <TableCell>
                                         <Chip
-                                            label={getStatusLabel(lead.status)}
-                                            color={getStatusColor(lead.status) as any}
-                                            size="small"
-                                            variant={lead.status === 'PENDING' ? 'outlined' : 'filled'}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
                                             label={lead.stage}
                                             size="small"
-                                            variant="outlined"
-                                            sx={{ borderColor: 'divider' }}
+                                            sx={{ bgcolor: getStageColor(lead.stage), color: 'white' }}
+                                            variant="filled"
                                         />
                                     </TableCell>
                                     <TableCell>

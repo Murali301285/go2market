@@ -14,6 +14,7 @@ import PageLoading from '../../components/common/PageLoading';
 import StatsCard from '../../components/dashboard/StatsCard';
 import SalesFunnel from '../../components/dashboard/SalesFunnel';
 import UserPerformanceChart from '../../components/dashboard/UserPerformanceChart';
+import RegionPerformanceChart from '../../components/dashboard/RegionPerformanceChart';
 
 const AdminDashboard: React.FC = () => {
     const [leads, setLeads] = useState<Lead[]>([]);
@@ -58,26 +59,31 @@ const AdminDashboard: React.FC = () => {
     });
 
     // Calculate stats
-    const totalLeads = filteredLeads.length;
-    const pendingApproval = filteredLeads.filter(l => l.status === 'PENDING').length;
-    const activeLeads = filteredLeads.filter(l => l.status === 'LOCKED').length;
-    const converted = filteredLeads.filter(l => l.stage === 'CONVERTED').length;
-    const poolLeads = filteredLeads.filter(l => l.status === 'POOL').length;
+    const activeLeadsCount = filteredLeads.filter(l => l.status !== 'INACTIVE').length;
+    const assignedCount = filteredLeads.filter(l => l.assignedToUserId && l.status !== 'INACTIVE').length;
+    const toBeAssignedCount = filteredLeads.filter(l => l.status === 'POOL').length;
+    const convertedCount = filteredLeads.filter(l => l.status === 'CONVERTED').length;
+    const conversionRate = activeLeadsCount > 0 ? Math.round((convertedCount / activeLeadsCount) * 100) : 0;
 
-    // User performance metrics
-    const userPerformance = users.map(user => {
-        const userLeads = leads.filter(l => l.assignedToUserId === user.id || l.createdBy === user.id);
-        return {
-            user,
-            generated: userLeads.filter(l => l.createdBy === user.id).length,
-            demoShowed: userLeads.filter(l => l.stage === 'DEMO_SHOWED' || l.stage === 'QUOTATION_SENT' || l.stage === 'NEGOTIATION' || l.stage === 'CONVERTED').length,
-            quotationSent: userLeads.filter(l => l.stage === 'QUOTATION_SENT' || l.stage === 'NEGOTIATION' || l.stage === 'CONVERTED').length,
-            negotiation: userLeads.filter(l => l.stage === 'NEGOTIATION' || l.stage === 'CONVERTED').length,
-            converted: userLeads.filter(l => l.stage === 'CONVERTED').length,
-            cancelled: userLeads.filter(l => l.stage === 'CANCELLED').length,
-            expired: userLeads.filter(l => l.stage === 'EXPIRED').length,
-        };
-    }).filter(perf => perf.generated > 0 || perf.user.role === 'distributor');
+    // Filter active leads for charts
+    const activeLeadsForCharts = filteredLeads.filter(l => l.status !== 'INACTIVE');
+
+    // User performance metrics - Only Market Users
+    const userPerformance = users
+        .filter(u => u.isMarketUser) // Filter for market users
+        .map(user => {
+            const userLeads = leads.filter(l => l.assignedToUserId === user.id || l.createdBy === user.id);
+            return {
+                user,
+                generated: userLeads.filter(l => l.createdBy === user.id).length,
+                demoShowed: userLeads.filter(l => l.stage === 'DEMO_SHOWED' || l.stage === 'QUOTATION_SENT' || l.stage === 'NEGOTIATION' || l.stage === 'CONVERTED').length,
+                quotationSent: userLeads.filter(l => l.stage === 'QUOTATION_SENT' || l.stage === 'NEGOTIATION' || l.stage === 'CONVERTED').length,
+                negotiation: userLeads.filter(l => l.stage === 'NEGOTIATION' || l.stage === 'CONVERTED').length,
+                converted: userLeads.filter(l => l.stage === 'CONVERTED').length,
+                cancelled: userLeads.filter(l => l.stage === 'CANCELLED').length,
+                expired: userLeads.filter(l => l.stage === 'EXPIRED').length,
+            };
+        });
 
     const handleExportPerformance = () => {
         const exportData = userPerformance.map(perf => ({
@@ -108,19 +114,19 @@ const AdminDashboard: React.FC = () => {
             {/* Statistics Cards */}
             <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
                 <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
-                    <StatsCard title="Total Leads" value={totalLeads} color="primary" />
+                    <StatsCard title="Total Leads (Active)" value={activeLeadsCount} color="primary" />
                 </Box>
                 <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
-                    <StatsCard title="Pending Approval" value={pendingApproval} color="warning" />
+                    <StatsCard title="Assigned" value={assignedCount} color="info" />
                 </Box>
                 <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
-                    <StatsCard title="Active Leads" value={activeLeads} color="info" />
+                    <StatsCard title="To Be Assigned" value={toBeAssignedCount} color="warning" />
                 </Box>
                 <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
-                    <StatsCard title="Converted" value={converted} color="success" />
+                    <StatsCard title="Converted" value={convertedCount} color="success" />
                 </Box>
                 <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
-                    <StatsCard title="Pool Leads" value={poolLeads} color="secondary" />
+                    <StatsCard title="Conversion Rate" value={`${conversionRate}%`} color="secondary" />
                 </Box>
             </Box>
 
@@ -192,14 +198,19 @@ const AdminDashboard: React.FC = () => {
                     />
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                    <UserPerformanceChart leads={filteredLeads} users={users} />
+                    <UserPerformanceChart leads={filteredLeads} users={users.filter(u => u.isMarketUser)} />
                 </Box>
+            </Box>
+
+            {/* Region Performance Chart */}
+            <Box sx={{ mb: 4 }}>
+                <RegionPerformanceChart leads={activeLeadsForCharts} />
             </Box>
 
             {/* User Performance Section */}
             <Paper sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6" fontWeight="bold">User Performance</Typography>
+                    <Typography variant="h6" fontWeight="bold">User Performance (Market Users)</Typography>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                         <TextField
                             placeholder="Search..."
@@ -295,7 +306,7 @@ const AdminDashboard: React.FC = () => {
                             {userPerformance.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={9} align="center">
-                                        No performance data available
+                                        No performance data available for market users
                                     </TableCell>
                                 </TableRow>
                             )}

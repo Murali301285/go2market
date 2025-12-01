@@ -7,7 +7,8 @@ import PeopleIcon from '@mui/icons-material/People';
 import MapIcon from '@mui/icons-material/Map';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
-import PoolIcon from '@mui/icons-material/Pool';
+import WavesIcon from '@mui/icons-material/Waves';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
@@ -33,8 +34,8 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
             { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin/dashboard' },
             { text: 'All Leads', icon: <ListAltIcon />, path: '/admin/all-leads' },
             { text: 'Lead Assignment', icon: <AssignmentIndIcon />, path: '/admin/lead-assignment' },
-            { text: 'Pool Leads', icon: <PoolIcon />, path: '/admin/pool' },
-            { text: 'Approvals', icon: <AssignmentIcon />, path: '/admin/approvals' },
+            { text: 'Lead Status', icon: <AssessmentIcon />, path: '/admin/lead-status' },
+            { text: 'Pool Leads', icon: <WavesIcon />, path: '/admin/pool' },
             { text: 'Bulk Upload', icon: <CloudUploadIcon />, path: '/admin/bulk-upload' },
             { text: 'Users', icon: <PeopleIcon />, path: '/admin/users' },
             { text: 'Regions', icon: <MapIcon />, path: '/admin/regions' },
@@ -43,7 +44,6 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
             { text: 'Dashboard', icon: <DashboardIcon />, path: '/user/dashboard' },
             { text: 'Create Lead', icon: <AddCircleIcon />, path: '/user/create-lead' },
             { text: 'My Leads', icon: <AssignmentIcon />, path: '/user/leads' },
-            { text: 'General Pool', icon: <PoolIcon />, path: '/user/pool' },
         ];
 
     const drawer = (

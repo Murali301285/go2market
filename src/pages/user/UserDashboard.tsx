@@ -10,7 +10,7 @@ import { getLeadsByUserId } from '../../services/leadService';
 import type { Lead } from '../../types';
 import SalesFunnel from '../../components/dashboard/SalesFunnel';
 import PageLoading from '../../components/common/PageLoading';
-import StatsSummary from '../../components/dashboard/StatsSummary';
+import StatsCard from '../../components/dashboard/StatsCard';
 
 const UserDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -54,21 +54,37 @@ const UserDashboard: React.FC = () => {
 
     // Calculate Stats
     const totalLeads = filteredLeads.length;
-    const stats = {
-        total: filteredLeads.length,
-        active: filteredLeads.filter(l => l.status === 'LOCKED').length,
-        negotiation: filteredLeads.filter(l => l.stage === 'NEGOTIATION').length,
-        demoShowed: filteredLeads.filter(l => l.stage === 'DEMO_SHOWED').length,
-        converted: filteredLeads.filter(l => l.status === 'CONVERTED').length,
-        cancelled: filteredLeads.filter(l => l.status === 'CANCELLED').length,
-    };
+    const demoShowed = filteredLeads.filter(l => l.stage === 'DEMO_SHOWED').length;
+    const negotiation = filteredLeads.filter(l => l.stage === 'NEGOTIATION').length;
+    const converted = filteredLeads.filter(l => l.status === 'CONVERTED').length;
+    const cancelled = filteredLeads.filter(l => l.status === 'CANCELLED').length;
+    const conversionRate = totalLeads > 0 ? Math.round((converted / totalLeads) * 100) : 0;
 
     return (
         <Box>
             <Typography variant="h4" gutterBottom fontWeight="bold">My Dashboard</Typography>
 
-            {/* Stats Summary */}
-            <StatsSummary stats={stats} />
+            {/* Stats Cards */}
+            <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 150px', minWidth: '150px' }}>
+                    <StatsCard title="Total Leads" value={totalLeads} color="primary" />
+                </Box>
+                <Box sx={{ flex: '1 1 150px', minWidth: '150px' }}>
+                    <StatsCard title="Demo Showed" value={demoShowed} color="info" />
+                </Box>
+                <Box sx={{ flex: '1 1 150px', minWidth: '150px' }}>
+                    <StatsCard title="Negotiation" value={negotiation} color="warning" />
+                </Box>
+                <Box sx={{ flex: '1 1 150px', minWidth: '150px' }}>
+                    <StatsCard title="Converted" value={converted} color="success" />
+                </Box>
+                <Box sx={{ flex: '1 1 150px', minWidth: '150px' }}>
+                    <StatsCard title="Cancelled" value={cancelled} color="error" />
+                </Box>
+                <Box sx={{ flex: '1 1 150px', minWidth: '150px' }}>
+                    <StatsCard title="Conversion Rate" value={`${conversionRate}%`} color="secondary" />
+                </Box>
+            </Box>
 
             {/* Filters */}
             <Paper sx={{ p: 2, mb: 3 }}>

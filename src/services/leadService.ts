@@ -181,3 +181,8 @@ export const updateLeadStage = async (leadId: string, stage: string): Promise<vo
     const leadRef = doc(db, COLLECTION_NAME, leadId);
     await updateDoc(leadRef, { stage });
 };
+
+export const updateLeadStatus = async (leadId: string, status: string): Promise<void> => {
+    const leadRef = doc(db, COLLECTION_NAME, leadId);
+    await updateDoc(leadRef, { status });
+};

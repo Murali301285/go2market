@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
     Box, Button, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Switch, Chip, InputAdornment, IconButton, Autocomplete
+    Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Switch, Chip, InputAdornment, IconButton, Autocomplete, FormControlLabel
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,6 +24,7 @@ const userSchema = z.object({
     role: z.enum(['admin', 'distributor', 'user']),
     defaultLockInMonths: z.number().refine(val => [1, 3, 6].includes(val), { message: "Must be 1, 3, or 6" }),
     assignedRegions: z.array(z.string()).min(1, 'At least one region must be assigned'),
+    isMarketUser: z.boolean().optional(),
 });
 
 type UserFormInputs = z.infer<typeof userSchema>;
@@ -41,6 +44,7 @@ const Users: React.FC = () => {
             role: 'distributor',
             defaultLockInMonths: 3,
             assignedRegions: [],
+            isMarketUser: false,
         }
     });
 
@@ -80,6 +84,7 @@ const Users: React.FC = () => {
             role: 'distributor',
             defaultLockInMonths: 3,
             assignedRegions: allRegionIds, // Default to all regions
+            isMarketUser: false,
         });
         setOpen(true);
     };
@@ -93,6 +98,7 @@ const Users: React.FC = () => {
             role: user.role,
             defaultLockInMonths: user.defaultLockInMonths,
             assignedRegions: user.assignedRegions || [],
+            isMarketUser: user.isMarketUser || false,
         });
         setOpen(true);
     };
@@ -106,6 +112,7 @@ const Users: React.FC = () => {
                     role: data.role,
                     defaultLockInMonths: data.defaultLockInMonths as 1 | 3 | 6,
                     assignedRegions: data.assignedRegions,
+                    isMarketUser: data.isMarketUser,
                 });
             } else {
                 await createUser({
@@ -115,6 +122,7 @@ const Users: React.FC = () => {
                     defaultLockInMonths: data.defaultLockInMonths as 1 | 3 | 6,
                     assignedRegions: data.assignedRegions,
                     isActive: true,
+                    isMarketUser: data.isMarketUser,
                 }, data.password);
             }
             setOpen(false);
@@ -159,6 +167,7 @@ const Users: React.FC = () => {
                             <TableCell>Name</TableCell>
                             <TableCell>Email</TableCell>
                             <TableCell>Role</TableCell>
+                            <TableCell>Market User</TableCell>
                             <TableCell>Regions</TableCell>
                             <TableCell>Lock-in (Months)</TableCell>
                             <TableCell>Status</TableCell>
@@ -171,6 +180,13 @@ const Users: React.FC = () => {
                                 <TableCell>{user.fullName}</TableCell>
                                 <TableCell>{user.email}</TableCell>
                                 <TableCell>{user.role}</TableCell>
+                                <TableCell>
+                                    {user.isMarketUser ? (
+                                        <CheckCircleIcon color="success" fontSize="small" />
+                                    ) : (
+                                        <CancelIcon color="disabled" fontSize="small" />
+                                    )}
+                                </TableCell>
                                 <TableCell>
                                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                                         {user.assignedRegions && user.assignedRegions.length > 0 ? (
@@ -275,6 +291,23 @@ const Users: React.FC = () => {
                                     </TextField>
                                 )}
                             />
+
+                            <Controller
+                                name="isMarketUser"
+                                control={control}
+                                render={({ field }) => (
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={field.value}
+                                                onChange={(e) => field.onChange(e.target.checked)}
+                                            />
+                                        }
+                                        label="Market User (Include in Dashboard)"
+                                    />
+                                )}
+                            />
+
                             <Controller
                                 name="defaultLockInMonths"
                                 control={control}
