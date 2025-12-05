@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import logo from '../../assets/g2m-logo.png';
+import logo from '../../assets/login-logo.png';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -95,9 +95,9 @@ const Login: React.FC = () => {
                 }}
             >
                 <Box sx={{ textAlign: 'center', mb: 2 }}>
-                    <Box component="img" src={logo} alt="g2M Logo" sx={{ height: 100, mb: 2 }} />
-                    <Typography variant="body2" color="text.secondary">
-                        go2Market - Lead Management System
+                    <Box component="img" src={logo} alt="Opportunity Tracker Logo" sx={{ height: 100, mb: 2 }} />
+                    <Typography variant="h5" color="primary" fontWeight="bold">
+                        Opportunity Tracker for Schools
                     </Typography>
                 </Box>
 

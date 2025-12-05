@@ -3,8 +3,7 @@ import { AppBar, Toolbar, Typography, IconButton, Box, Menu, MenuItem } from '@m
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import { useAuth } from '../../hooks/useAuth';
-import logoSquare from '../../assets/g2m-logo.png';
-import logoHorizontal from '../../assets/g2m-logo-horizontal.png';
+import headerLogo from '../../assets/header-logo.png';
 
 interface HeaderProps {
     onMenuClick: () => void;
@@ -39,26 +38,15 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                 >
                     <MenuIcon />
                 </IconButton>
-                {/* Desktop: Horizontal Logo */}
+                {/* Logo */}
                 <Box
                     component="img"
-                    src={logoHorizontal}
-                    alt="go2Market Logo"
+                    src={headerLogo}
+                    alt="Opportunity Tracker"
                     sx={{
                         mr: 2,
-                        height: 45,
-                        display: { xs: 'none', sm: 'block' }
-                    }}
-                />
-                {/* Mobile: Square Logo */}
-                <Box
-                    component="img"
-                    src={logoSquare}
-                    alt="g2M Logo"
-                    sx={{
-                        mr: 1,
-                        height: 40,
-                        display: { xs: 'block', sm: 'none' }
+                        height: 50,
+                        display: 'block'
                     }}
                 />
                 {/* Spacer to push user info to right */}
