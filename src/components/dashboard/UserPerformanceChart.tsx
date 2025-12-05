@@ -34,11 +34,11 @@ const UserPerformanceChart: React.FC<UserPerformanceChartProps> = ({ leads, user
         )); // Only show users with activity
 
     return (
-        <Paper sx={{ p: 3, height: '100%' }}>
+        <Paper sx={{ p: 3, height: '100%', minHeight: 450 }}>
             <Typography variant="h6" gutterBottom fontWeight="bold">
                 User Performance
             </Typography>
-            <Box sx={{ height: 400, width: '100%' }}>
+            <Box sx={{ height: 350, width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         layout="vertical"

@@ -36,11 +36,11 @@ const RegionPerformanceChart: React.FC<RegionPerformanceChartProps> = ({ leads }
     const data = Array.from(regionMap.values());
 
     return (
-        <Paper sx={{ p: 3, height: '100%' }}>
+        <Paper sx={{ p: 3, height: '100%', minHeight: 450 }}>
             <Typography variant="h6" gutterBottom fontWeight="bold">
                 Region Performance
             </Typography>
-            <Box sx={{ height: 400, width: '100%' }}>
+            <Box sx={{ height: 350, width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={data}

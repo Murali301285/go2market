@@ -11,6 +11,7 @@ import WavesIcon from '@mui/icons-material/Waves';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import SchoolIcon from '@mui/icons-material/School';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -35,6 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, handleDrawerToggle }) => 
             { text: 'All Leads', icon: <ListAltIcon />, path: '/admin/all-leads' },
             { text: 'Lead Assignment', icon: <AssignmentIndIcon />, path: '/admin/lead-assignment' },
             { text: 'Lead Status', icon: <AssessmentIcon />, path: '/admin/lead-status' },
+            { text: 'School Details', icon: <SchoolIcon />, path: '/admin/school-details' },
             { text: 'Pool Leads', icon: <WavesIcon />, path: '/admin/pool' },
             { text: 'Bulk Upload', icon: <CloudUploadIcon />, path: '/admin/bulk-upload' },
             { text: 'Users', icon: <PeopleIcon />, path: '/admin/users' },

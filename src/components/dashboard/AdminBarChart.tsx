@@ -16,16 +16,19 @@ const AdminBarChart: React.FC<AdminBarChartProps> = ({ data, title }) => {
     return (
         <Paper sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" gutterBottom>{title}</Typography>
-            <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="value" fill="#3b82f6" />
-                </BarChart>
-            </ResponsiveContainer>
+            {/* Explicit fixed height for the chart container to avoid Recharts 'height(-1)' error */}
+            <div style={{ width: '100%', height: 320 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="value" fill="#3b82f6" />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
         </Paper>
     );
 };

@@ -13,6 +13,7 @@ import GeneralPoolAdmin from './pages/admin/GeneralPoolAdmin';
 import BulkUpload from './pages/admin/BulkUpload';
 import LeadAssignment from './pages/admin/LeadAssignment';
 import LeadStatus from './pages/admin/LeadStatus';
+import SchoolDetails from './pages/admin/SchoolDetails';
 import UserDashboard from './pages/user/UserDashboard';
 import CreateLead from './pages/user/CreateLead';
 import MyLeads from './pages/user/MyLeads';
@@ -43,6 +44,7 @@ function App() {
               <Route path="/admin/bulk-upload" element={<BulkUpload />} />
               <Route path="/admin/lead-assignment" element={<LeadAssignment />} /> {/* Added LeadAssignment route */}
               <Route path="/admin/lead-status" element={<LeadStatus />} />
+              <Route path="/admin/school-details" element={<SchoolDetails />} />
             </Route>
 
             {/* Shared Routes (Accessible by all roles) */}
